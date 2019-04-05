@@ -3,12 +3,12 @@ TARGET = QSsh
 QT += network
 DEFINES += QSSH_LIBRARY
 
-LIBS += -lbotan-2
+LIBS += C:/Botan/lib/botan.lib
 
 #Enable debug log
 #DEFINES += CREATOR_SSH_DEBUG
 
-INCLUDEPATH += /usr/include/botan-2/
+INCLUDEPATH += C:/Botan/include/botan-2
 
 include(../../qtcreatorlibrary.pri)
 

@@ -68,7 +68,7 @@ namespace {
     {
         QMutexLocker locker(&staticInitMutex);
         if (!staticInitializationsDone) {
-            Botan::LibraryInitializer::initialize("thread_safe=true");
+            //Botan::LibraryInitializer::initialize("thread_safe=true");
             qRegisterMetaType<QSsh::SshError>("QSsh::SshError");
             qRegisterMetaType<QSsh::SftpJobId>("QSsh::SftpJobId");
             qRegisterMetaType<QSsh::SftpFileInfo>("QSsh::SftpFileInfo");

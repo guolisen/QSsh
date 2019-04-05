@@ -41,6 +41,28 @@ class SshConnectionParameters;
 
 namespace Internal { class SftpFileSystemModelPrivate; }
 
+class SftpDirNode;
+class SftpFileNode
+{
+public:
+    SftpFileNode() : parent(0) { }
+    virtual ~SftpFileNode() { }
+
+    QString path;
+    SftpFileInfo fileInfo;
+    SftpDirNode *parent;
+};
+
+class SftpDirNode : public SftpFileNode
+{
+public:
+    SftpDirNode() : lsState(LsNotYetCalled) { }
+    ~SftpDirNode() { qDeleteAll(children); }
+
+    enum { LsNotYetCalled, LsRunning, LsFinished } lsState;
+    QList<SftpFileNode *> children;
+};
+
 // Very simple read-only model. Symbolic links are not followed.
 class QSSH_EXPORT SftpFileSystemModel : public QAbstractItemModel
 {
@@ -64,6 +86,7 @@ public:
     static const int PathRole = Qt::UserRole;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
+    SftpJobId downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size);
 signals:
      /*
       * E.g. "Permission denied". Note that this can happen without direct user intervention,
@@ -77,6 +100,7 @@ signals:
      * the signal has been emitted.
      */
     void connectionError(const QString &errorMessage);
+    void connectionSuccess();
 
     // Success <=> error.isEmpty().
     void sftpOperationFinished(QSsh::SftpJobId, const QString &error);
@@ -89,7 +113,7 @@ private slots:
     void handleFileInfo(QSsh::SftpJobId jobId, const QList<QSsh::SftpFileInfo> &fileInfoList);
     void handleSftpJobFinished(QSsh::SftpJobId jobId, const QString &errorMessage);
 
-private:
+protected:
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;

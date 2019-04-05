@@ -146,7 +146,9 @@ INCLUDEPATH += \
 CONFIG += depend_includepath
 
 LIBS += -L$$IDE_LIBRARY_PATH
-LIBS += -lbotan-2
+LIBS += C:/Botan/lib/botan.lib
+
+INCLUDEPATH += C:/Botan/include/botan-2
 
 !isEmpty(vcproj) {
     DEFINES += IDE_LIBRARY_BASENAME=\"$$IDE_LIBRARY_BASENAME\"

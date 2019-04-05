@@ -88,6 +88,7 @@ public:
 
     ~SftpChannel();
 
+    SftpJobId downloadFile(const QString &remoteFilePath, QSharedPointer<QIODevice> localFile, quint32 size);
 signals:
     void initialized();
     void initializationFailed(const QString &reason);

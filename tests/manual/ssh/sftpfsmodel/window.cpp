@@ -57,11 +57,13 @@ SftpFsWindow::~SftpFsWindow()
 
 void SftpFsWindow::connectToHost()
 {
-    m_ui->connectButton->setEnabled(false);
+    //m_ui->connectButton->setEnabled(false);
     SshConnectionParameters sshParams;
     sshParams.host = m_ui->hostLineEdit->text();
     sshParams.userName = m_ui->userLineEdit->text();
     sshParams.authenticationType = SshConnectionParameters::AuthenticationByPassword;
+    //sshParams.authenticationType = SshConnectionParameters::AuthenticationByKey;
+    //sshParams.privateKeyFile = "C:/Users/qq/.ssh/id_rsa";
     sshParams.password = m_ui->passwordLineEdit->text();
     sshParams.port = m_ui->portSpinBox->value();
     sshParams.timeout = 10;
@@ -112,5 +114,5 @@ void SftpFsWindow::handleConnectionError(const QString &errorMessage)
 {
     QMessageBox::warning(this, tr("Connection Error"),
         tr("Fatal SSH error: %1").arg(errorMessage));
-    qApp->quit();
+    //qApp->quit();
 }

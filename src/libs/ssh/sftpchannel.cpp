@@ -232,6 +232,13 @@ SftpJobId SftpChannel::downloadFile(const QString &remoteFilePath, QSharedPointe
         new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting)));
 }
 
+SftpJobId SftpChannel::downloadFile(const QString &remoteFilePath, QSharedPointer<QIODevice> localFile, quint32 size)
+{
+    return d->createJob(Internal::SftpDownload::Ptr(
+        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting)));
+}
+
+
 SftpJobId SftpChannel::uploadDir(const QString &localDirPath,
     const QString &remoteParentDirPath)
 {

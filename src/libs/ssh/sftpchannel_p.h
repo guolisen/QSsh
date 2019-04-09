@@ -64,7 +64,7 @@ signals:
     void finished(QSsh::SftpJobId job, const QString &error = QString());
     void dataAvailable(QSsh::SftpJobId job, const QString &data);
     void fileInfoAvailable(QSsh::SftpJobId job, const QList<QSsh::SftpFileInfo> &fileInfoList);
-
+    void downloadPrograss(quint64 currentSize, quint64 totleSize);
 private:
     typedef QMap<SftpJobId, AbstractSftpOperation::Ptr> JobMap;
 

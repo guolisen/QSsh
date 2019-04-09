@@ -35,6 +35,7 @@
 #include "ssh_global.h"
 
 #include <QAbstractItemModel>
+#include <QMutex>
 
 namespace QSsh {
 class SshConnectionParameters;
@@ -87,6 +88,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     SftpJobId downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size);
+
 signals:
      /*
       * E.g. "Permission denied". Note that this can happen without direct user intervention,
@@ -101,7 +103,7 @@ signals:
      */
     void connectionError(const QString &errorMessage);
     void connectionSuccess();
-
+    void downloadPrograss(quint64 currentSize, quint64 totleSize);
     // Success <=> error.isEmpty().
     void sftpOperationFinished(QSsh::SftpJobId, const QString &error);
 
@@ -123,7 +125,7 @@ protected:
 
     void statRootDirectory();
     void shutDown();
-
+    QMutex downloadMutex_;
     Internal::SftpFileSystemModelPrivate * const d;
 };
 

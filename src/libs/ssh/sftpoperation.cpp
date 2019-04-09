@@ -173,11 +173,12 @@ void AbstractSftpTransfer::calculateInFlightCount(quint32 chunkSize)
 
 
 SftpDownload::SftpDownload(SftpJobId jobId, const QString &remotePath,
-    const QSharedPointer<QIODevice> &localFile, SftpOverwriteMode mode,
+    const QSharedPointer<QIODevice> &localFile, SftpOverwriteMode mode, quint32 reqsize,
     const QSharedPointer<QSsh::Internal::SftpDownloadDir> &parentJob)
     : AbstractSftpTransfer(jobId, remotePath, localFile), eofId(SftpInvalidJob), mode(mode),
-      parentJob(parentJob)
+      parentJob(parentJob), size(reqsize)
 {
+
 }
 
 SftpOutgoingPacket &SftpDownload::initialPacket(SftpOutgoingPacket &packet)

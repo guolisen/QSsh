@@ -37,7 +37,8 @@
 
 #include <QDir>
 #include <QFile>
-
+#include <QDebug>
+#include <QBuffer>
 /*!
     \class QSsh::SftpChannel
 
@@ -117,6 +118,9 @@ SftpChannel::SftpChannel(quint32 channelId,
     connect(d, SIGNAL(finished(QSsh::SftpJobId,QString)), this,
         SIGNAL(finished(QSsh::SftpJobId,QString)), Qt::QueuedConnection);
     connect(d, SIGNAL(closed()), this, SIGNAL(closed()), Qt::QueuedConnection);
+
+    connect(d, &Internal::SftpChannelPrivate::downloadPrograss, this,
+            [this](quint64 current, quint64 total){emit downloadPrograss(current, total);}, Qt::QueuedConnection);
 }
 
 SftpChannel::State SftpChannel::state() const
@@ -223,19 +227,19 @@ SftpJobId SftpChannel::downloadFile(const QString &remoteFilePath,
 {
     QSharedPointer<QFile> localFile(new QFile(localFilePath));
     return d->createJob(Internal::SftpDownload::Ptr(
-        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, mode)));
+        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, mode, 0)));
 }
 
 SftpJobId SftpChannel::downloadFile(const QString &remoteFilePath, QSharedPointer<QIODevice> localFile)
 {
     return d->createJob(Internal::SftpDownload::Ptr(
-        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting)));
+        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting, 0)));
 }
 
 SftpJobId SftpChannel::downloadFile(const QString &remoteFilePath, QSharedPointer<QIODevice> localFile, quint32 size)
 {
     return d->createJob(Internal::SftpDownload::Ptr(
-        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting)));
+        new Internal::SftpDownload(++d->m_nextJobId, remoteFilePath, localFile, SftpOverwriteExisting, size)));
 }
 
 
@@ -870,10 +874,19 @@ void SftpChannelPrivate::handleReadData()
         return;
     }
 
+    emit downloadPrograss(op->offset, op->fileSize);
     if (op->offset >= op->fileSize && op->fileSize != 0)
+    {
+        QString msg = tr("FINISH Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
+        qDebug() << msg;
         finishTransferRequest(it);
+    }
     else
+    {
+        QString msg = tr("SEND Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
+        qDebug() << msg;
         sendReadRequest(op, response.requestId);
+    }
 }
 
 void SftpChannelPrivate::handleAttrs()
@@ -906,6 +919,8 @@ void SftpChannelPrivate::handleAttrs()
         SftpDownload::Ptr op = transfer.staticCast<SftpDownload>();
         if (response.attrs.sizePresent) {
             op->fileSize = response.attrs.size;
+            if (op->size)
+                op->fileSize = op->size;
         } else {
             op->fileSize = 0;
             op->eofId = op->jobId;
@@ -949,7 +964,7 @@ void SftpChannelPrivate::handleDownloadDir(SftpListDir::Ptr op,
             QSharedPointer<QFile> localFile(new QFile(fullPathLocal));
             Internal::SftpDownload::Ptr downloadJob = Internal::SftpDownload::Ptr(
                 new Internal::SftpDownload(++m_nextJobId, fullPathRemote, localFile,
-                                           op->parentJob->mode, op->parentJob));
+                                           op->parentJob->mode, 0, op->parentJob));
 
             op->parentJob->downloadsInProgress.append(downloadJob);
             createJob(downloadJob);
@@ -1019,10 +1034,13 @@ void SftpChannelPrivate::sendReadRequest(const SftpDownload::Ptr &job,
     quint32 requestId)
 {
     Q_ASSERT(job->eofId == SftpInvalidJob);
+    quint32 dataSize = AbstractSftpPacket::MaxDataSize;
+    if (job->size)
+        dataSize = job->size + 1;
     sendData(m_outgoingPacket.generateReadFile(job->remoteHandle, job->offset,
-        AbstractSftpPacket::MaxDataSize, requestId).rawData());
+        dataSize, requestId).rawData());
     job->offsets[requestId] = job->offset;
-    job->offset += AbstractSftpPacket::MaxDataSize;
+    job->offset += dataSize;
     if (job->offset >= job->fileSize)
         job->eofId = requestId;
 }
@@ -1059,7 +1077,9 @@ void SftpChannelPrivate::finishTransferRequest(const JobMap::Iterator &it)
 {
     AbstractSftpTransfer::Ptr job = it.value().staticCast<AbstractSftpTransfer>();
     if (job->inFlightCount == 1)
+    {
         sendTransferCloseHandle(job, it.key());
+    }
     else
         removeTransferRequest(it);
 }

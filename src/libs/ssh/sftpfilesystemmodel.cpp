@@ -125,26 +125,26 @@ SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, const QStr
     QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
     const SftpFileNode * const fileNode = indexToFileNode(index);
     QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
-    QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
+    //QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
     const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, targetFilePath,
         SftpOverwriteExisting);
     if (jobId != SftpInvalidJob)
         d->externalJobs << jobId;
     return jobId;
 }
-
+#include <QDebug>
 SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size)
 {
+    QMutexLocker locker(&downloadMutex_);
     QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
     const SftpFileNode * const fileNode = indexToFileNode(index);
     QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
-    QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
-    //const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, targetFilePath,
-    //    SftpOverwriteExisting);
-    //if (jobId != SftpInvalidJob)
-    //    d->externalJobs << jobId;
-    //return jobId;
-    return 0;
+    //QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
+    qDebug() << "ddddd: " << fileNode->path;
+    const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, localFile, size);
+    if (jobId != SftpInvalidJob)
+        d->externalJobs << jobId;
+    return jobId;
 }
 
 int SftpFileSystemModel::columnCount(const QModelIndex &parent) const
@@ -296,6 +296,8 @@ void SftpFileSystemModel::handleSshConnectionEstablished()
     connect(d->sftpChannel.data(), SIGNAL(initializationFailed(QString)),
         SLOT(handleSftpChannelInitializationFailed(QString)));
     d->sftpChannel->initialize();
+    connect(d->sftpChannel.data(), &SftpChannel::downloadPrograss, this,
+            [this](quint64 current, quint64 total){emit downloadPrograss(current, total);});
     emit connectionSuccess();
 }
 

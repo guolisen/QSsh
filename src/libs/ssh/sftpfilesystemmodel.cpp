@@ -140,7 +140,6 @@ SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, QSharedPoi
     const SftpFileNode * const fileNode = indexToFileNode(index);
     QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
     //QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
-    qDebug() << "ddddd: " << fileNode->path;
     const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, localFile, size);
     if (jobId != SftpInvalidJob)
         d->externalJobs << jobId;
@@ -156,19 +155,32 @@ int SftpFileSystemModel::columnCount(const QModelIndex &parent) const
 QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 {
     const SftpFileNode * const node = indexToFileNode(index);
+#if 0
     if (index.column() == 0 && role == Qt::DecorationRole) {
+        if (node->fileInfo.name.contains(".gz") || node->fileInfo.name.contains(".zip") ||
+                node->fileInfo.name.contains(".tar") ||
+                node->fileInfo.name.contains(".tgz"))
+        {
+            return QIcon(QLatin1String(":/core/compress.png"));
+        }
+        if (node->fileInfo.name.contains(".log"))
+        {
+            return QIcon(QLatin1String(":/core/common.ico"));
+        }
+        if (node->fileInfo.name.contains(".txt"))
+        {
+            return QIcon(QLatin1String(":/core/textfile.ico"));
+        }
+
         switch (node->fileInfo.type) {
         case FileTypeRegular:
         case FileTypeOther:
-            return QIcon(QLatin1String(":/core/images/unknownfile.png"));
+            return QIcon(QLatin1String(":/core/unkown.ico"));
         case FileTypeDirectory:
-            return QIcon(QLatin1String(":/core/images/dir.png"));
+            return QIcon(QLatin1String(":/core/folder.ico"));
         case FileTypeUnknown:
-            return QIcon(QLatin1String(":/core/images/help.png")); // Shows a question mark.
+            return QIcon(QLatin1String(":/core/unkown.ico")); // Shows a question mark.
         }
-    }
-    if (index.column() == 0 && role == Qt::DisplayRole) {
-        return node->fileInfo.name;
     }
 
     if (index.column() == 0) {
@@ -177,6 +189,53 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
         if (role == PathRole)
             return node->path;
     }
+#endif
+    switch (role) {
+    case Qt::EditRole:
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0: return node->fileInfo.name;
+        case 1: return node->fileInfo.size;
+        default:
+            qWarning("data: invalid display value column %d", index.column());
+            break;
+        }
+        break;
+    case Qt::DecorationRole:
+        if (index.column() == 0)
+        {
+            if (node->fileInfo.name.contains(".gz") || node->fileInfo.name.contains(".zip") ||
+                    node->fileInfo.name.contains(".tar") ||
+                    node->fileInfo.name.contains(".tgz"))
+            {
+                return QIcon(QLatin1String(":/core/compress.png"));
+            }
+            if (node->fileInfo.name.contains(".log"))
+            {
+                return QIcon(QLatin1String(":/core/common.ico"));
+            }
+            if (node->fileInfo.name.contains(".txt"))
+            {
+                return QIcon(QLatin1String(":/core/textfile.ico"));
+            }
+
+            switch (node->fileInfo.type) {
+            case FileTypeRegular:
+            case FileTypeOther:
+                return QIcon(QLatin1String(":/core/unkown.ico"));
+            case FileTypeDirectory:
+                return QIcon(QLatin1String(":/core/folder.ico"));
+            case FileTypeUnknown:
+                return QIcon(QLatin1String(":/core/unkown.ico")); // Shows a question mark.
+            }
+        }
+        break;
+    case Qt::TextAlignmentRole:
+        if (index.column() == 1)
+            return QVariant(Qt::AlignTrailing | Qt::AlignVCenter);
+        break;
+    }
+
     return QVariant();
 }
 
@@ -194,9 +253,9 @@ QVariant SftpFileSystemModel::headerData(int section, Qt::Orientation orientatio
     if (role != Qt::DisplayRole)
         return QVariant();
     if (section == 0)
-        return tr("File Type");
-    if (section == 1)
         return tr("File Name");
+    if (section == 1)
+        return tr("File Size");
     return QVariant();
 }
 

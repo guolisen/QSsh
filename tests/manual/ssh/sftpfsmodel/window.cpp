@@ -40,6 +40,7 @@
 #include <QModelIndexList>
 #include <QItemSelectionModel>
 #include <QString>
+#include <QBuffer>
 
 using namespace QSsh;
 
@@ -82,11 +83,22 @@ void SftpFsWindow::downloadFile()
     const QModelIndexList selectedIndexes = m_ui->fsView->selectionModel()->selectedIndexes();
     if (selectedIndexes.count() != 2)
         return;
-    const QString targetFilePath = QFileDialog::getSaveFileName(this, tr("Choose target file"),
-        QDir::tempPath());
-    if (targetFilePath.isEmpty())
-        return;
-    const SftpJobId jobId = m_fsModel->downloadFile(selectedIndexes.at(1), targetFilePath);
+    //const QString targetFilePath = QFileDialog::getSaveFileName(this, tr("Choose target file"),
+    //    QDir::tempPath());
+    //if (targetFilePath.isEmpty())
+     //   return;
+m_ui->outputTextEdit->appendPlainText("Download start");
+    QSharedPointer<QBuffer> buffer(new QBuffer);
+    buffer->open(QBuffer::ReadWrite);
+    const SftpJobId jobId = m_fsModel->downloadFile(selectedIndexes.at(1), buffer, 200);
+
+    //if (buffer->waitForReadyRead(3000))
+    //{
+        QString message1;
+        QString s = QString::fromLatin1(buffer->buffer());
+        message1 = tr("Result: %1").arg(s);
+        m_ui->outputTextEdit->appendPlainText(message1);
+    //}
     QString message;
     if (jobId == SftpInvalidJob)
         message = tr("Download failed.");

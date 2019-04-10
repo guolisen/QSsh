@@ -30,7 +30,7 @@
       <item row="0" column="1">
        <widget class="QLineEdit" name="hostLineEdit">
         <property name="text">
-         <string>192.168.0.102</string>
+         <string>192.168.0.105</string>
         </property>
        </widget>
       </item>
@@ -44,7 +44,7 @@
       <item row="1" column="1">
        <widget class="QLineEdit" name="userLineEdit">
         <property name="text">
-         <string>qq</string>
+         <string>guolisen</string>
         </property>
        </widget>
       </item>
@@ -58,7 +58,7 @@
       <item row="2" column="1">
        <widget class="QLineEdit" name="passwordLineEdit">
         <property name="text">
-         <string>123456</string>
+         <string>lifesgood</string>
         </property>
         <property name="echoMode">
          <enum>QLineEdit::Password</enum>

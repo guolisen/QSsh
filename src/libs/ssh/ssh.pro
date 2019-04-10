@@ -68,4 +68,7 @@ HEADERS = $$PWD/sshsendfacility_p.h \
     $$PWD/sftpfilesystemmodel.h \
     $$PWD/ssh_global.h
 
+RESOURCES += \
+    res.qrc
+
 

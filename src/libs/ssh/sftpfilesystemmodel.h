@@ -88,7 +88,8 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     SftpJobId downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size);
-
+    void shutDown();
+    void update(const QModelIndex &index);
 signals:
      /*
       * E.g. "Permission denied". Note that this can happen without direct user intervention,
@@ -124,7 +125,6 @@ protected:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
     void statRootDirectory();
-    void shutDown();
     QMutex downloadMutex_;
     Internal::SftpFileSystemModelPrivate * const d;
 };

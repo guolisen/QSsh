@@ -43,11 +43,21 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     bool parseSuccess;
-    const QSsh::SshConnectionParameters &parameters
-        = ArgumentsCollector(app.arguments()).collect(parseSuccess);
-    if (!parseSuccess)
-        return EXIT_FAILURE;
-    Shell shell(parameters);
+    //const QSsh::SshConnectionParameters &parameters
+    //    = ArgumentsCollector(app.arguments()).collect(parseSuccess);
+    //if (!parseSuccess)
+     //   return EXIT_FAILURE;
+
+    QSsh::SshConnectionParameters sshParams;
+    sshParams.host = "192.168.0.101";
+    sshParams.userName = "guolisen";
+    sshParams.authenticationType = QSsh::SshConnectionParameters::AuthenticationByPassword;
+    //sshParams.privateKeyFile = "C:/Users/qq/.ssh/id_rsa";
+
+    sshParams.password = "12345678";
+    sshParams.port = 22;
+    sshParams.timeout = 1000;
+    Shell shell(sshParams);
     shell.run();
     return app.exec();
 }

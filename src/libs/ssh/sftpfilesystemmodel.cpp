@@ -330,6 +330,21 @@ void SftpFileSystemModel::shutDown()
     d->rootNode = 0;
 }
 
+void SftpFileSystemModel::update(const QModelIndex &index)
+{
+    SftpFileNode * const fileNode = indexToFileNode(index);
+
+    if (!fileNode)
+        return;
+    SftpDirNode * const parent = fileNode->parent;
+    if (!parent)
+        return;
+    parent->lsState = SftpDirNode::LsNotYetCalled;
+    parent->children.clear();
+    d->lsOps.insert(d->sftpChannel->listDirectory(parent->path), parent);
+    parent->lsState = SftpDirNode::LsRunning;
+}
+
 void SftpFileSystemModel::handleSshConnectionFailure()
 {
     emit connectionError(d->sshConnection->errorString());
@@ -371,7 +386,7 @@ void SftpFileSystemModel::handleSftpChannelInitializationFailed(const QString &r
 void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileInfo> &fileInfoList)
 {
     if (jobId == d->statJobId) {
-        QSSH_ASSERT_AND_RETURN(!d->rootNode);
+        //QSSH_ASSERT_AND_RETURN(!d->rootNode);
         beginInsertRows(QModelIndex(), 0, 0);
         d->rootNode = new SftpDirNode;
         d->rootNode->path = d->rootDirectory;
@@ -382,7 +397,7 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         return;
     }
     SftpDirNode * const parentNode = d->lsOps.value(jobId);
-    QSSH_ASSERT_AND_RETURN(parentNode);
+    //QSSH_ASSERT_AND_RETURN(parentNode);
     QList<SftpFileInfo> filteredList;
     foreach (const SftpFileInfo &fi, fileInfoList) {
         if (fi.name != QLatin1String(".") && fi.name != QLatin1String(".."))
@@ -409,6 +424,8 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         childNode->parent = parentNode;
         parentNode->children << childNode;
     }
+    qSort(parentNode->children.begin(), parentNode->children.end(),[](SftpFileNode* lh, SftpFileNode* rh){
+        return lh->fileInfo.name.toLower() < rh->fileInfo.name.toLower();});
     emit layoutChanged(); // Should be endInsertRows(), see above.
 }
 

@@ -73,7 +73,7 @@ void RemoteProcessTest::run()
     m_state = TestingSuccess;
     m_started = false;
     m_timeoutTimer->start();
-    m_remoteRunner->run("ls -a /tmp", m_sshParams);
+    m_remoteRunner->run("cmd /c dir", m_sshParams);
 }
 
 void RemoteProcessTest::handleConnectionError()
@@ -278,7 +278,7 @@ void RemoteProcessTest::handleProcessClosed(int exitStatus)
 void RemoteProcessTest::handleTimeout()
 {
     std::cerr << "Error: Timeout waiting for progress." << std::endl;
-    qApp->quit();
+    //qApp->quit();
 }
 
 void RemoteProcessTest::handleConnected()
@@ -289,7 +289,7 @@ void RemoteProcessTest::handleConnected()
     connect(m_catProcess.data(), SIGNAL(started()), SLOT(handleProcessStarted()));
     connect(m_catProcess.data(), SIGNAL(closed(int)), SLOT(handleProcessClosed(int)));
     m_started = false;
-    m_timeoutTimer->start();
+    //m_timeoutTimer->start();
     m_catProcess->start();
 }
 

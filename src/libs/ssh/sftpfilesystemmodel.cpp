@@ -332,14 +332,20 @@ void SftpFileSystemModel::shutDown()
 
 void SftpFileSystemModel::update(const QModelIndex &index)
 {
-    SftpFileNode * const fileNode = indexToFileNode(index);
-
-    if (!fileNode)
-        return;
-    SftpDirNode * const parent = fileNode->parent;
+    SftpDirNode* parent = nullptr;
+    if (!index.isValid())
+    {
+        parent = dynamic_cast<SftpDirNode*>(d->rootNode);
+    }
+    else
+    {
+        SftpFileNode* fileNode = indexToFileNode(index);
+        parent = fileNode->parent;
+    }
     if (!parent)
         return;
     parent->lsState = SftpDirNode::LsNotYetCalled;
+    qDeleteAll(parent->children);
     parent->children.clear();
     d->lsOps.insert(d->sftpChannel->listDirectory(parent->path), parent);
     parent->lsState = SftpDirNode::LsRunning;

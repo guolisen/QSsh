@@ -38,23 +38,25 @@
 #include <QIcon>
 #include <QList>
 #include <QString>
+#include <memory>
 
 namespace QSsh {
 namespace Internal {
 namespace {
 
-typedef QHash<SftpJobId, SftpDirNode *> DirNodeHash;
+typedef QHash<SftpJobId, SftpDirNode*> DirNodeHash;
 
-SftpFileNode *indexToFileNode(const QModelIndex &index)
+SftpFileNode* indexToFileNode(const QModelIndex &index)
 {
-    return static_cast<SftpFileNode *>(index.internalPointer());
+    std::shared_ptr<SftpFileNode> fileNode = *((std::shared_ptr<SftpFileNode>*)(index.internalPointer()));
+    return fileNode.get();
 }
 
-SftpDirNode *indexToDirNode(const QModelIndex &index)
+SftpDirNode* indexToDirNode(const QModelIndex &index)
 {
-    SftpFileNode * const fileNode = indexToFileNode(index);
+    SftpFileNode* fileNode(indexToFileNode(index));
     QSSH_ASSERT(fileNode);
-    return dynamic_cast<SftpDirNode *>(fileNode);
+    return dynamic_cast<SftpDirNode*>(fileNode);
 }
 
 } // anonymous namespace
@@ -65,7 +67,7 @@ public:
     SshConnection *sshConnection;
     SftpChannel::Ptr sftpChannel;
     QString rootDirectory;
-    SftpFileNode *rootNode;
+    std::shared_ptr<SftpFileNode> rootNode;
     SftpJobId statJobId;
     DirNodeHash lsOps;
     QList<SftpJobId> externalJobs;
@@ -107,7 +109,7 @@ void SftpFileSystemModel::setRootDirectory(const QString &path)
 {
     beginResetModel();
     d->rootDirectory = path;
-    delete d->rootNode;
+    //delete d->rootNode;
     d->rootNode = 0;
     d->lsOps.clear();
     d->statJobId = SftpInvalidJob;
@@ -123,7 +125,7 @@ QString SftpFileSystemModel::rootDirectory() const
 SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, const QString &targetFilePath)
 {
     QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
-    const SftpFileNode * const fileNode = indexToFileNode(index);
+    SftpFileNode* fileNode = indexToFileNode(index);
     QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
     //QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
     const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, targetFilePath,
@@ -137,7 +139,7 @@ SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, QSharedPoi
 {
     QMutexLocker locker(&downloadMutex_);
     QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
-    const SftpFileNode * const fileNode = indexToFileNode(index);
+    SftpFileNode* fileNode = indexToFileNode(index);
     QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
     //QSSH_ASSERT_AND_RETURN_VALUE(fileNode->fileInfo.type == FileTypeRegular, SftpInvalidJob);
     const SftpJobId jobId = d->sftpChannel->downloadFile(fileNode->path, localFile, size);
@@ -154,7 +156,7 @@ int SftpFileSystemModel::columnCount(const QModelIndex &parent) const
 
 QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 {
-    const SftpFileNode * const node = indexToFileNode(index);
+    SftpFileNode* node = indexToFileNode(index);
 #if 0
     if (index.column() == 0 && role == Qt::DecorationRole) {
         if (node->fileInfo.name.contains(".gz") || node->fileInfo.name.contains(".zip") ||
@@ -266,12 +268,12 @@ QModelIndex SftpFileSystemModel::index(int row, int column, const QModelIndex &p
     if (!d->rootNode)
         return QModelIndex();
     if (!parent.isValid())
-        return createIndex(row, column, d->rootNode);
-    const SftpDirNode * const parentNode = indexToDirNode(parent);
+        return createIndex(row, column, &d->rootNode);
+    SftpDirNode* parentNode = indexToDirNode(parent);
     QSSH_ASSERT_AND_RETURN_VALUE(parentNode, QModelIndex());
     QSSH_ASSERT_AND_RETURN_VALUE(row < parentNode->children.count(), QModelIndex());
-    SftpFileNode * const childNode = parentNode->children.at(row);
-    return createIndex(row, column, childNode);
+    std::shared_ptr<SftpFileNode> childNode = parentNode->children.at(row);
+    return createIndex(row, column, &childNode);
 }
 
 QModelIndex SftpFileSystemModel::parent(const QModelIndex &child) const
@@ -279,16 +281,17 @@ QModelIndex SftpFileSystemModel::parent(const QModelIndex &child) const
     if (!child.isValid()) // Don't assert on this, since the model tester tries it.
         return QModelIndex();
 
-    const SftpFileNode * const childNode = indexToFileNode(child);
+    SftpFileNode* childNode = indexToFileNode(child);
     QSSH_ASSERT_AND_RETURN_VALUE(childNode, QModelIndex());
-    if (childNode == d->rootNode)
+    if (childNode == d->rootNode.get())
         return QModelIndex();
-    SftpDirNode * const parentNode = childNode->parent;
+    std::shared_ptr<SftpDirNode> parentNode = childNode->parent;
     if (parentNode == d->rootNode)
-        return createIndex(0, 0, d->rootNode);
-    const SftpDirNode * const grandParentNode = parentNode->parent;
+        return createIndex(0, 0, &d->rootNode);
+    std::shared_ptr<SftpDirNode> grandParentNode = parentNode->parent;
+    std::shared_ptr<SftpFileNode> castType = std::static_pointer_cast<SftpFileNode>(parentNode);
     QSSH_ASSERT_AND_RETURN_VALUE(grandParentNode, QModelIndex());
-    return createIndex(grandParentNode->children.indexOf(parentNode), 0, parentNode);
+    return createIndex(grandParentNode->children.indexOf(castType), 0, &parentNode);
 }
 
 int SftpFileSystemModel::rowCount(const QModelIndex &parent) const
@@ -299,7 +302,7 @@ int SftpFileSystemModel::rowCount(const QModelIndex &parent) const
         return 1;
     if (parent.column() != 0)
         return 0;
-    SftpDirNode * const dirNode = indexToDirNode(parent);
+    SftpDirNode* dirNode = indexToDirNode(parent);
     if (!dirNode)
         return 0;
     if (dirNode->lsState != SftpDirNode::LsNotYetCalled)
@@ -326,21 +329,27 @@ void SftpFileSystemModel::shutDown()
         SshConnectionManager::instance().releaseConnection(d->sshConnection);
         d->sshConnection = 0;
     }
-    delete d->rootNode;
+
     d->rootNode = 0;
 }
 
 void SftpFileSystemModel::update(const QModelIndex &index)
 {
-    SftpFileNode * const fileNode = indexToFileNode(index);
-
-    if (!fileNode)
-        return;
-    SftpDirNode * const parent = fileNode->parent;
+    SftpDirNode* parent = nullptr;
+    if (!index.isValid())
+    {
+        parent = std::dynamic_pointer_cast<SftpDirNode>(d->rootNode).get();
+    }
+    else
+    {
+        SftpFileNode* fileNode = indexToFileNode(index);
+        parent = fileNode->parent.get();
+    }
     if (!parent)
         return;
     parent->lsState = SftpDirNode::LsNotYetCalled;
     parent->children.clear();
+    qDeleteAll(parent->children);
     d->lsOps.insert(d->sftpChannel->listDirectory(parent->path), parent);
     parent->lsState = SftpDirNode::LsRunning;
 }
@@ -388,7 +397,7 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
     if (jobId == d->statJobId) {
         //QSSH_ASSERT_AND_RETURN(!d->rootNode);
         beginInsertRows(QModelIndex(), 0, 0);
-        d->rootNode = new SftpDirNode;
+        d->rootNode = std::make_shared<SftpDirNode>();
         d->rootNode->path = d->rootDirectory;
         d->rootNode->fileInfo = fileInfoList.first();
         d->rootNode->fileInfo.name = d->rootDirectory == QLatin1String("/")
@@ -396,7 +405,7 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         endInsertRows();
         return;
     }
-    SftpDirNode * const parentNode = d->lsOps.value(jobId);
+    SftpDirNode* parentNode = d->lsOps.value(jobId);
     //QSSH_ASSERT_AND_RETURN(parentNode);
     QList<SftpFileInfo> filteredList;
     foreach (const SftpFileInfo &fi, fileInfoList) {
@@ -411,11 +420,11 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
     emit layoutAboutToBeChanged();
 
     foreach (const SftpFileInfo &fileInfo, filteredList) {
-        SftpFileNode *childNode;
+        std::shared_ptr<SftpFileNode> childNode;
         if (fileInfo.type == FileTypeDirectory)
-            childNode = new SftpDirNode;
+            childNode = std::make_shared<SftpDirNode>();
         else
-            childNode = new SftpFileNode;
+            childNode = std::make_shared<SftpFileNode>();
         childNode->path = parentNode->path;
         if (!childNode->path.endsWith(QLatin1Char('/')))
             childNode->path += QLatin1Char('/');
@@ -424,7 +433,7 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         childNode->parent = parentNode;
         parentNode->children << childNode;
     }
-    qSort(parentNode->children.begin(), parentNode->children.end(),[](SftpFileNode* lh, SftpFileNode* rh){
+    qSort(parentNode->children.begin(), parentNode->children.end(),[](std::shared_ptr<SftpFileNode> lh, std::shared_ptr<SftpFileNode> rh){
         return lh->fileInfo.name.toLower() < rh->fileInfo.name.toLower();});
     emit layoutChanged(); // Should be endInsertRows(), see above.
 }

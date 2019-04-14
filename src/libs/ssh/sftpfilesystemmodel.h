@@ -36,6 +36,7 @@
 
 #include <QAbstractItemModel>
 #include <QMutex>
+#include <memory>
 
 namespace QSsh {
 class SshConnectionParameters;
@@ -51,17 +52,17 @@ public:
 
     QString path;
     SftpFileInfo fileInfo;
-    SftpDirNode *parent;
+    std::shared_ptr<SftpDirNode> parent;
 };
 
 class SftpDirNode : public SftpFileNode
 {
 public:
     SftpDirNode() : lsState(LsNotYetCalled) { }
-    ~SftpDirNode() { qDeleteAll(children); }
+    ~SftpDirNode() { /*qDeleteAll(children);*/ }
 
     enum { LsNotYetCalled, LsRunning, LsFinished } lsState;
-    QList<SftpFileNode *> children;
+    QList<std::shared_ptr<SftpFileNode>> children;
 };
 
 // Very simple read-only model. Symbolic links are not followed.

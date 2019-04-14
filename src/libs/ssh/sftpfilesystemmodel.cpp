@@ -155,41 +155,7 @@ int SftpFileSystemModel::columnCount(const QModelIndex &parent) const
 QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 {
     const SftpFileNode * const node = indexToFileNode(index);
-#if 0
-    if (index.column() == 0 && role == Qt::DecorationRole) {
-        if (node->fileInfo.name.contains(".gz") || node->fileInfo.name.contains(".zip") ||
-                node->fileInfo.name.contains(".tar") ||
-                node->fileInfo.name.contains(".tgz"))
-        {
-            return QIcon(QLatin1String(":/core/compress.png"));
-        }
-        if (node->fileInfo.name.contains(".log"))
-        {
-            return QIcon(QLatin1String(":/core/common.ico"));
-        }
-        if (node->fileInfo.name.contains(".txt"))
-        {
-            return QIcon(QLatin1String(":/core/textfile.ico"));
-        }
 
-        switch (node->fileInfo.type) {
-        case FileTypeRegular:
-        case FileTypeOther:
-            return QIcon(QLatin1String(":/core/unkown.ico"));
-        case FileTypeDirectory:
-            return QIcon(QLatin1String(":/core/folder.ico"));
-        case FileTypeUnknown:
-            return QIcon(QLatin1String(":/core/unkown.ico")); // Shows a question mark.
-        }
-    }
-
-    if (index.column() == 0) {
-        if (role == Qt::DisplayRole)
-            return node->fileInfo.name;
-        if (role == PathRole)
-            return node->path;
-    }
-#endif
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:

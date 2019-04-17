@@ -50,6 +50,7 @@ public:
 
     static const QByteArray CryptAlgo3Des;
     static const QByteArray CryptAlgoAes128;
+    static const QByteArray CryptAlgoAes128ctr;
     static const QList<QByteArray> EncryptionAlgorithms;
 
     static const QByteArray HMacSha1;

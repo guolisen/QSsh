@@ -90,8 +90,20 @@ void SshAbstractCryptoFacility::recreateKeys(const SshKeyExchange &kex)
     const QByteArray cryptKeyData = generateHash(kex, keyChar(), keySize);
     SymmetricKey cryptKey(convertByteArray(cryptKeyData), keySize);
 
-    Keyed_Filter * const cipherMode = makeCipherMode(cipher, new Null_Padding, iv, cryptKey);
-    m_pipe.reset(new Pipe(cipherMode));
+    //Keyed_Filter * const cipherMode = makeCipherMode(cipher, new Null_Padding, iv, cryptKey);
+    const std::string &cryptAlgoParam = botanAlgoNameParameter(cryptAlgoName(kex));
+    //Keyed_Filter * const cipherMode = get_cipher(cryptAlgoParam, cryptKey, iv, ENCRYPTION);
+
+    if (cryptAlgoParam == "AES-128/CTR")
+    {
+        Keyed_Filter * const cipherMode = get_cipher(cryptAlgoParam, cryptKey, iv, ENCRYPTION);;
+        m_pipe.reset(new Pipe(cipherMode));
+    }
+    else
+    {
+        Keyed_Filter * const cipherMode = makeCipherMode(cipher, new Null_Padding, iv, cryptKey);
+        m_pipe.reset(new Pipe(cipherMode));
+    }
 
     m_macLength = botanHMacKeyLen(hMacAlgoName(kex));
     const QByteArray hMacKeyData = generateHash(kex, macChar(), macLength());

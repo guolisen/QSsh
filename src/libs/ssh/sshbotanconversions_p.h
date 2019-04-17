@@ -69,9 +69,31 @@ inline const char *botanKeyExchangeAlgoName(const QByteArray &rfcAlgoName)
 inline const char *botanCryptAlgoName(const QByteArray &rfcAlgoName)
 {
     Q_ASSERT(rfcAlgoName == SshCapabilities::CryptAlgo3Des
-        || rfcAlgoName == SshCapabilities::CryptAlgoAes128);
+        || rfcAlgoName == SshCapabilities::CryptAlgoAes128
+             || rfcAlgoName == SshCapabilities::CryptAlgoAes128ctr);
     return rfcAlgoName == SshCapabilities::CryptAlgo3Des
         ? "TripleDES" : "AES-128";
+}
+
+inline const char *botanAlgoNameParameter(const QByteArray &rfcAlgoName)
+{
+    Q_ASSERT(rfcAlgoName == SshCapabilities::CryptAlgo3Des
+        || rfcAlgoName == SshCapabilities::CryptAlgoAes128
+             || rfcAlgoName == SshCapabilities::CryptAlgoAes128ctr);
+    if (rfcAlgoName == SshCapabilities::CryptAlgo3Des)
+    {
+        return "TripleDES";
+    }
+    else if (rfcAlgoName == SshCapabilities::CryptAlgoAes128)
+    {
+        return "AES-128/CBC";
+    }
+    else if (rfcAlgoName == SshCapabilities::CryptAlgoAes128ctr)
+    {
+        return "AES-128/CTR";
+    }
+
+    return "";
 }
 
 inline const char *botanEmsaAlgoName(const QByteArray &rfcAlgoName)

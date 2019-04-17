@@ -311,7 +311,7 @@ void SftpFileSystemModel::update(const QModelIndex &index)
     if (!parent)
         return;
     parent->lsState = SftpDirNode::LsNotYetCalled;
-    qDeleteAll(parent->children);
+    //qDeleteAll(parent->children);
     parent->children.clear();
     d->lsOps.insert(d->sftpChannel->listDirectory(parent->path), parent);
     parent->lsState = SftpDirNode::LsRunning;

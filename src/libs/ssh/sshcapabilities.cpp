@@ -64,9 +64,10 @@ const QList<QByteArray> SshCapabilities::PublicKeyAlgorithms
 
 const QByteArray SshCapabilities::CryptAlgo3Des("3des-cbc");
 const QByteArray SshCapabilities::CryptAlgoAes128("aes128-cbc");
+const QByteArray SshCapabilities::CryptAlgoAes128ctr("aes128-ctr");
 const QList<QByteArray> SshCapabilities::EncryptionAlgorithms
     = QList<QByteArray>() << SshCapabilities::CryptAlgoAes128
-          << SshCapabilities::CryptAlgo3Des;
+          << SshCapabilities::CryptAlgo3Des << SshCapabilities::CryptAlgoAes128ctr;
 
 const QByteArray SshCapabilities::HMacSha1("hmac-sha1");
 const QByteArray SshCapabilities::HMacSha196("hmac-sha1-96");

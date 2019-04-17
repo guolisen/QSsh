@@ -84,7 +84,6 @@ public:
 
 signals:
     void timeout();
-
 protected:
     AbstractSshChannel(quint32 channelId, SshSendFacility &sendFacility);
 

@@ -159,6 +159,8 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
+        if (!node)
+            return "";
         switch (index.column()) {
         case 0: return node->fileInfo.name;
         case 1: return node->fileInfo.size;
@@ -170,6 +172,10 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
     case Qt::DecorationRole:
         if (index.column() == 0)
         {
+
+            if (!node)
+                return QVariant();
+#if 0
             if (node->fileInfo.name.contains(".gz") || node->fileInfo.name.contains(".zip") ||
                     node->fileInfo.name.contains(".tar") ||
                     node->fileInfo.name.contains(".tgz"))
@@ -184,15 +190,15 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
             {
                 return QIcon(QLatin1String(":/core/textfile.ico"));
             }
-
+#endif
             switch (node->fileInfo.type) {
-            case FileTypeRegular:
-            case FileTypeOther:
-                return QIcon(QLatin1String(":/core/unkown.ico"));
+            //case FileTypeRegular:
+            //case FileTypeOther:
+            //    return QIcon(QLatin1String(":/core/unkown.ico"));
             case FileTypeDirectory:
                 return QIcon(QLatin1String(":/core/folder.ico"));
-            case FileTypeUnknown:
-                return QIcon(QLatin1String(":/core/unkown.ico")); // Shows a question mark.
+            //case FileTypeUnknown:
+            //    return QIcon(QLatin1String(":/core/unkown.ico")); // Shows a question mark.
             }
         }
         break;
@@ -396,8 +402,8 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         childNode->parent = parentNode;
         parentNode->children << childNode;
     }
-    qSort(parentNode->children.begin(), parentNode->children.end(),[](SftpFileNode* lh, SftpFileNode* rh){
-        return lh->fileInfo.name.toLower() < rh->fileInfo.name.toLower();});
+    //qSort(parentNode->children.begin(), parentNode->children.end(),[](SftpFileNode* lh, SftpFileNode* rh){
+    //    return lh->fileInfo.name.toLower() < rh->fileInfo.name.toLower();});
     emit layoutChanged(); // Should be endInsertRows(), see above.
 }
 

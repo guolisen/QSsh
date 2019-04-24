@@ -72,11 +72,11 @@ public:
         }
 
         int i = 0;
-        Q_FOREACH(auto listFile, children)
+        auto iter = children.begin();
+        for (; iter != children.end(); ++iter, ++i)
         {
-            if (newFileNode->fileInfo.name > listFile->fileInfo.name)
+            if (newFileNode->fileInfo.name > (*iter)->fileInfo.name)
             {
-                ++i;
                 continue;
             }
             else
@@ -87,7 +87,7 @@ public:
             }
 
         }
-        if (children.size() == (i-1))
+        if (iter == children.end())
             children << newFileNode;
     }
     enum { LsNotYetCalled, LsRunning, LsFinished } lsState;

@@ -36,7 +36,7 @@
 
 #include <QAbstractItemModel>
 #include <QMutex>
-
+#include <QDebug>
 namespace QSsh {
 class SshConnectionParameters;
 
@@ -49,6 +49,7 @@ public:
     SftpFileNode() : parent(0) { }
     virtual ~SftpFileNode() { }
 
+
     QString path;
     SftpFileInfo fileInfo;
     SftpDirNode *parent;
@@ -60,6 +61,35 @@ public:
     SftpDirNode() : lsState(LsNotYetCalled) { }
     ~SftpDirNode() { qDeleteAll(children); }
 
+    void insertChild(SftpFileNode* newFileNode)
+    {
+        if (children.contains(newFileNode))
+            return;
+        if (children.isEmpty())
+        {
+            children << newFileNode;
+            return;
+        }
+
+        int i = 0;
+        Q_FOREACH(auto listFile, children)
+        {
+            if (newFileNode->fileInfo.name > listFile->fileInfo.name)
+            {
+                ++i;
+                continue;
+            }
+            else
+            {
+                qDebug() << i << " " << newFileNode->path;
+                children.insert(i, newFileNode);
+                return;
+            }
+
+        }
+        if (children.size() == (i-1))
+            children << newFileNode;
+    }
     enum { LsNotYetCalled, LsRunning, LsFinished } lsState;
     QList<SftpFileNode *> children;
 };

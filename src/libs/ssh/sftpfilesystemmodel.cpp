@@ -400,7 +400,8 @@ void SftpFileSystemModel::handleFileInfo(SftpJobId jobId, const QList<SftpFileIn
         childNode->path += fileInfo.name;
         childNode->fileInfo = fileInfo;
         childNode->parent = parentNode;
-        parentNode->children << childNode;
+        //parentNode->children << childNode;
+        parentNode->insertChild(childNode);
     }
     //qSort(parentNode->children.begin(), parentNode->children.end(),[](SftpFileNode* lh, SftpFileNode* rh){
     //    return lh->fileInfo.name.toLower() < rh->fileInfo.name.toLower();});

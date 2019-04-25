@@ -81,7 +81,6 @@ public:
             }
             else
             {
-                qDebug() << i << " " << newFileNode->path;
                 children.insert(i, newFileNode);
                 return;
             }

@@ -132,7 +132,7 @@ SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, const QStr
         d->externalJobs << jobId;
     return jobId;
 }
-#include <QDebug>
+
 SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size)
 {
     QMutexLocker locker(&downloadMutex_);

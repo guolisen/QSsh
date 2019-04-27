@@ -75,7 +75,7 @@ public:
         auto iter = children.begin();
         for (; iter != children.end(); ++iter, ++i)
         {
-            if (newFileNode->fileInfo.name > (*iter)->fileInfo.name)
+            if (newFileNode->fileInfo.name.compare((*iter)->fileInfo.name, Qt::CaseInsensitive) > 0)
             {
                 continue;
             }
@@ -84,7 +84,6 @@ public:
                 children.insert(i, newFileNode);
                 return;
             }
-
         }
         if (iter == children.end())
             children << newFileNode;
@@ -119,6 +118,8 @@ public:
     SftpJobId downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size);
     void shutDown();
     void update(const QModelIndex &index);
+    void setNameFilters(const QStringList &filters);
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
 signals:
      /*
       * E.g. "Permission denied". Note that this can happen without direct user intervention,
@@ -149,13 +150,13 @@ protected:
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-
+    bool passNameFilters(const SftpFileNode *node) const;
     void statRootDirectory();
     QMutex downloadMutex_;
     Internal::SftpFileSystemModelPrivate * const d;
+    QStringList nameFilters_;
 };
 
 } // namespace QSsh;

@@ -38,6 +38,7 @@
 #include <QIcon>
 #include <QList>
 #include <QString>
+#include <QRegularExpression>
 
 namespace QSsh {
 namespace Internal {
@@ -210,14 +211,48 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 
     return QVariant();
 }
+void SftpFileSystemModel::setNameFilters(const QStringList &filters)
+{
+    nameFilters_ = filters;
+}
 
 Qt::ItemFlags SftpFileSystemModel::flags(const QModelIndex &index) const
 {
+    Qt::ItemFlags flags = QAbstractItemModel::flags(index);
     if (!index.isValid())
-        return Qt::NoItemFlags;
+        return flags;
+
+    const SftpFileNode * const node = indexToFileNode(index);
+    if (!passNameFilters(node)) {
+        flags &= ~Qt::ItemIsEnabled;
+        // ### TODO you shouldn't be able to set this as the current item, task 119433
+        return flags;
+    }
+
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
+bool SftpFileSystemModel::passNameFilters(const SftpFileNode* node) const
+{
+    if (nameFilters_.isEmpty())
+        return true;
+
+    // Check the name regularexpression filters
+    if (node->fileInfo.type != FileTypeDirectory) {
+        const QRegularExpression::PatternOptions options =
+                QRegularExpression::CaseInsensitiveOption;
+
+        for (const auto &nameFilter : nameFilters_) {
+            QRegularExpression rx(QRegularExpression::wildcardToRegularExpression(nameFilter), options);
+            QRegularExpressionMatch match = rx.match(node->fileInfo.name);
+            if (match.hasMatch())
+                return true;
+        }
+        return false;
+    }
+
+    return true;
+}
 QVariant SftpFileSystemModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation != Qt::Horizontal)

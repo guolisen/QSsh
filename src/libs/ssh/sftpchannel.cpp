@@ -877,14 +877,14 @@ void SftpChannelPrivate::handleReadData()
     emit downloadPrograss(op->offset, op->fileSize);
     if (op->offset >= op->fileSize && op->fileSize != 0)
     {
-        QString msg = tr("FINISH Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
-        qDebug() << msg;
+        //QString msg = tr("FINISH Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
+        //qDebug() << msg;
         finishTransferRequest(it);
     }
     else
     {
-        QString msg = tr("SEND Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
-        qDebug() << msg;
+        //QString msg = tr("SEND Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
+        //qDebug() << msg;
         sendReadRequest(op, response.requestId);
     }
 }

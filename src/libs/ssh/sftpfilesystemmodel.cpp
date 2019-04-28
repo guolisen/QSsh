@@ -214,6 +214,7 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 void SftpFileSystemModel::setNameFilters(const QStringList &filters)
 {
     nameFilters_ = filters;
+    emit layoutChanged();
 }
 
 Qt::ItemFlags SftpFileSystemModel::flags(const QModelIndex &index) const

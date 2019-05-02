@@ -111,6 +111,7 @@ public:
 
     SftpJobId downloadFile(const QModelIndex &index, const QString &targetFilePath);
     SftpJobId uploadFile(const QString &localFilePath, const QString &targetFilePath);
+    SftpJobId removeFile(const QString &removeFilePath);
 
     // Use this to get the full path of a file or directory.
     static const int PathRole = Qt::UserRole;

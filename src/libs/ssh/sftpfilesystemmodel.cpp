@@ -144,6 +144,15 @@ SftpJobId SftpFileSystemModel::uploadFile(const QString &localFilePath, const QS
     return jobId;
 }
 
+SftpJobId SftpFileSystemModel::removeFile(const QString &removeFilePath)
+{
+    QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
+    const SftpJobId jobId = d->sftpChannel->removeFile(removeFilePath);
+    if (jobId != SftpInvalidJob)
+        d->externalJobs << jobId;
+    return jobId;
+}
+
 SftpJobId SftpFileSystemModel::downloadFile(const QModelIndex &index, QSharedPointer<QIODevice> localFile, quint32 size)
 {
     QMutexLocker locker(&downloadMutex_);

@@ -110,6 +110,7 @@ public:
     QString rootDirectory() const;
 
     SftpJobId downloadFile(const QModelIndex &index, const QString &targetFilePath);
+    SftpJobId uploadFile(const QString &localFilePath, const QString &targetFilePath);
 
     // Use this to get the full path of a file or directory.
     static const int PathRole = Qt::UserRole;

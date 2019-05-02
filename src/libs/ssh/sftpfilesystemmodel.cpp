@@ -144,10 +144,21 @@ SftpJobId SftpFileSystemModel::uploadFile(const QString &localFilePath, const QS
     return jobId;
 }
 
-SftpJobId SftpFileSystemModel::removeFile(const QString &removeFilePath)
+SftpJobId SftpFileSystemModel::removeFile(const QModelIndex &index)
 {
     QSSH_ASSERT_AND_RETURN_VALUE(d->rootNode, SftpInvalidJob);
-    const SftpJobId jobId = d->sftpChannel->removeFile(removeFilePath);
+    const SftpFileNode * const fileNode = indexToFileNode(index);
+    QSSH_ASSERT_AND_RETURN_VALUE(fileNode, SftpInvalidJob);
+    SftpJobId jobId = 0;
+    //if (fileNode->fileInfo.type != FileTypeDirectory)
+    //{
+        jobId = d->sftpChannel->removeFile(fileNode->path);
+    //}
+    //else
+    //{
+        //jobId = d->sftpChannel->removeDirectory(fileNode->path);
+    //}
+
     if (jobId != SftpInvalidJob)
         d->externalJobs << jobId;
     return jobId;
@@ -233,6 +244,11 @@ QVariant SftpFileSystemModel::data(const QModelIndex &index, int role) const
 void SftpFileSystemModel::setNameFilters(const QStringList &filters)
 {
     nameFilters_ = filters;
+    emit layoutChanged();
+}
+
+void SftpFileSystemModel::updateLayout()
+{
     emit layoutChanged();
 }
 

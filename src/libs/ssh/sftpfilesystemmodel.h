@@ -111,7 +111,7 @@ public:
 
     SftpJobId downloadFile(const QModelIndex &index, const QString &targetFilePath);
     SftpJobId uploadFile(const QString &localFilePath, const QString &targetFilePath);
-    SftpJobId removeFile(const QString &removeFilePath);
+    SftpJobId removeFile(const QModelIndex &index);
 
     // Use this to get the full path of a file or directory.
     static const int PathRole = Qt::UserRole;
@@ -121,6 +121,7 @@ public:
     void shutDown();
     void update(const QModelIndex &index);
     void setNameFilters(const QStringList &filters);
+    void updateLayout();
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
 signals:
      /*

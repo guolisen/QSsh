@@ -119,8 +119,8 @@ SftpChannel::SftpChannel(quint32 channelId,
         SIGNAL(finished(QSsh::SftpJobId,QString)), Qt::QueuedConnection);
     connect(d, SIGNAL(closed()), this, SIGNAL(closed()), Qt::QueuedConnection);
 
-    connect(d, &Internal::SftpChannelPrivate::downloadPrograss, this,
-            [this](quint64 current, quint64 total){emit downloadPrograss(current, total);}, Qt::QueuedConnection);
+    connect(d, &Internal::SftpChannelPrivate::transferPrograss, this,
+            [this](quint64 current, quint64 total){emit transferPrograss(current, total);}, Qt::QueuedConnection);
 }
 
 SftpChannel::State SftpChannel::state() const
@@ -874,7 +874,7 @@ void SftpChannelPrivate::handleReadData()
         return;
     }
 
-    emit downloadPrograss(op->offset, op->fileSize);
+    emit transferPrograss(op->offset, op->fileSize);
     if (op->offset >= op->fileSize && op->fileSize != 0)
     {
         //QString msg = tr("FINISH Name: %1 Result: op->offset: %2 op->fileSize: %3").arg(op->remotePath).arg(op->offset).arg(op->fileSize);
@@ -1155,6 +1155,7 @@ void SftpChannelPrivate::sendWriteRequest(const JobMap::Iterator &it)
         sendData(m_outgoingPacket.generateWriteFile(job->remoteHandle,
             job->offset, data, it.key()).rawData());
         job->offset += AbstractSftpPacket::MaxDataSize;
+        emit transferPrograss(job->offset, job->localFile->size());
     }
 }
 

@@ -100,7 +100,7 @@ signals:
      // TODO: Also emit for each file copied by uploadDir().
     void dataAvailable(QSsh::SftpJobId job, const QString &data);
 
-    void downloadPrograss(quint64 currentSize, quint64 totleSize);
+    void transferPrograss(quint64 currentSize, quint64 totleSize);
     /*
      * This signal is emitted as a result of:
      *     - statFile() (with the list having exactly one element)

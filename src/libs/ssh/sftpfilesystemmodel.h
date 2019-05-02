@@ -135,7 +135,7 @@ signals:
      */
     void connectionError(const QString &errorMessage);
     void connectionSuccess();
-    void downloadPrograss(quint64 currentSize, quint64 totleSize);
+    void transferPrograss(quint64 currentSize, quint64 totleSize);
     // Success <=> error.isEmpty().
     void sftpOperationFinished(QSsh::SftpJobId, const QString &error);
 

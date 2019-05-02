@@ -396,8 +396,8 @@ void SftpFileSystemModel::handleSshConnectionEstablished()
     connect(d->sftpChannel.data(), SIGNAL(initializationFailed(QString)),
         SLOT(handleSftpChannelInitializationFailed(QString)));
     d->sftpChannel->initialize();
-    connect(d->sftpChannel.data(), &SftpChannel::downloadPrograss, this,
-            [this](quint64 current, quint64 total){emit downloadPrograss(current, total);});
+    connect(d->sftpChannel.data(), &SftpChannel::transferPrograss, this,
+            [this](quint64 current, quint64 total){emit transferPrograss(current, total);});
     emit connectionSuccess();
 }
 

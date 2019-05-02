@@ -361,7 +361,9 @@ void SftpFileSystemModel::update(const QModelIndex &index)
         parent = fileNode->parent;
     }
     if (!parent)
-        return;
+    {
+        parent = dynamic_cast<SftpDirNode*>(d->rootNode);
+    }
     parent->lsState = SftpDirNode::LsNotYetCalled;
     //qDeleteAll(parent->children);
     parent->children.clear();
